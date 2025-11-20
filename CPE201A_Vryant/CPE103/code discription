@@ -1,0 +1,5 @@
+Code 
+The implementation of the Day Planner System makes the pseudocode come into life by creating a working program that combines both task scheduling and journal management features. It uses programming principles taught to programmers by integrating a simple functioning design and data extraction by taking advantage of structures and vectors. Each component of the code, like user authentication, task handling, and journal management, is organized into separate functions for simplicity and easy maintenance. The program takes advantage of libraries such as <string>, <iomanip>, and <vector> to handle text data and dynamic data that can store multiple records. With the use of these libraries, the system provides its users with a console-based interface that allows for registering, logging in, adding or viewing tasks, and writing personal journal entries.
+
+Overall, the code shows the practical application of the fundamental programming concepts, which include loops, conditionals, switch-case control structures, and object-based data handling. 
+
