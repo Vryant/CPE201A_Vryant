@@ -1,0 +1,551 @@
+#include <iostream> 
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <cstdlib>
+using namespace std;
+
+struct Task {
+    string description;
+    string time;
+    int day;
+    int month;
+};
+
+struct JournalEntry {
+    string title;
+    string content;
+    int day;
+    int month;
+    int year;
+    string mood;
+};
+
+struct User {
+    string username;
+    string password;
+    vector<Task> tasks;
+    vector<JournalEntry> journal;
+};
+
+vector<User> users;
+int currentUserIndex = -1;
+
+void displayMenu();
+void registerUser();
+bool loginUser();
+void addTask();
+void viewSchedule();
+void viewTasksByDate();
+void deleteTask();
+void editTask();
+void displayDailySchedule(int day, int month);
+void journalMenu();
+void addJournalEntry();
+void viewAllJournals();
+void viewJournalByDate();
+void searchJournalByMood();
+void editJournalEntry();
+void deleteJournalEntry();
+
+int main() {
+    int choice;
+    bool loggedIn = false;
+    system("CLS");
+    cout << "========================================" << endl;
+    cout << "   WELCOME TO THE DAY PLANNER SYSTEM" << endl;
+    cout << "========================================" << endl;
+    
+    while (true) {
+        if (!loggedIn) {
+            cout << "\n1. Register" << endl;
+            cout << "2. Login" << endl;
+            cout << "3. Exit" << endl;
+            cout << "Choose an option: ";
+            cin >> choice;
+            
+            if (choice == 1) {
+                registerUser();
+            } else if (choice == 2) {
+                loggedIn = loginUser();
+            } else if (choice == 3) {
+                cout << "Thank you for using Day Planner. Goodbye!" << endl;
+                break;
+            } else {
+                cout << "Invalid choice. Please try again." << endl;
+            }
+        } else {
+            displayMenu();
+            cin >> choice;
+            
+            switch (choice) {
+                case 1:
+                    addTask();
+                    break;
+                case 2:
+                    viewSchedule();
+                    break;
+                case 3:
+                    viewTasksByDate();
+                    break;
+                case 4:
+                    editTask();
+                    break;
+                case 5:
+                    deleteTask();
+                    break;
+                case 6:
+                    journalMenu();
+                    break;
+                case 7:
+                    cout << "\nLogging out..." << endl;
+                    loggedIn = false;
+                    currentUserIndex = -1;
+                    break;
+                case 8:
+                    cout << "Thank you for using Day Planner. Goodbye!" << endl;
+                    return 0;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+void displayMenu() {
+    
+    cout << "\n========================================" << endl;
+    cout << "           MAIN MENU" << endl;
+    cout << "========================================" << endl;
+    cout << "1. Add Task/Schedule" << endl;
+    cout << "2. View All Tasks" << endl;
+    cout << "3. View Tasks by Date" << endl;
+    cout << "4. Edit Task" << endl;
+    cout << "5. Delete Task" << endl;
+    cout << "6. Journal System" << endl;
+    cout << "7. Logout" << endl;
+    cout << "8. Exit" << endl;
+    cout << "Choose an option: ";
+}
+
+void registerUser() {
+    User newUser;
+    system("CLS");
+    cout << "\n--- REGISTRATION ---" << endl;
+    cout << "Enter username: ";
+    cin >> newUser.username;
+    
+    for (const auto& user : users) {
+        if (user.username == newUser.username) {
+            cout << "Username already exists. Please try another." << endl;
+            return;
+        }
+    }
+    
+    cout << "Enter password: ";
+    cin >> newUser.password;
+    
+    users.push_back(newUser);
+    cout << "Registration successful! You can now login." << endl;
+}
+
+bool loginUser() {
+    system("CLS");
+    string username, password;
+    cout << "\n--- LOGIN ---" << endl;
+    cout << "Enter username: ";
+    cin >> username;
+    cout << "Enter password: ";
+    cin >> password;
+    
+    for (int i = 0; i < users.size(); i++) {
+        if (users[i].username == username && users[i].password == password) {
+            currentUserIndex = i;
+            cout << "\nWelcome back, " << username << "!" << endl;
+            return true;
+        }
+    }
+    
+    cout << "Invalid username or password." << endl;
+    return false;
+}
+
+void addTask() {
+    Task newTask;
+    cin.ignore();
+    
+    system("CLS");
+    cout << "\n--- ADD NEW TASK ---" << endl;
+    cout << "Enter task description: ";
+    getline(cin, newTask.description);
+    
+    cout << "Enter time (e.g., 09:00 AM): ";
+    getline(cin, newTask.time);
+    
+    cout << "Enter day (1-31): ";
+    cin >> newTask.day;
+    
+    cout << "Enter month (1-12): ";
+    cin >> newTask.month;
+    
+    users[currentUserIndex].tasks.push_back(newTask);
+    cout << "Task added successfully!" << endl;
+}
+
+void viewSchedule() {
+    system("CLS");
+    cout << "\n========================================" << endl;
+    cout << "         YOUR COMPLETE SCHEDULE" << endl;
+    cout << "========================================" << endl;
+    
+    if (users[currentUserIndex].tasks.empty()) {
+        cout << "No tasks scheduled yet." << endl;
+        return;
+    }
+    
+    cout << left << setw(5) << "No." 
+         << setw(25) << "Task" 
+         << setw(12) << "Time" 
+         << setw(10) << "Date" << endl;
+    cout << string(52, '-') << endl;
+    
+    for (int i = 0; i < users[currentUserIndex].tasks.size(); i++) {
+        Task& t = users[currentUserIndex].tasks[i];
+        cout << left << setw(5) << (i + 1)
+             << setw(25) << t.description
+             << setw(12) << t.time
+             << t.day << "/" << t.month << endl;
+    }
+}
+
+void viewTasksByDate() {
+    system("CLS");
+    int day, month;
+    cout << "\n--- VIEW TASKS BY DATE ---" << endl;
+    cout << "Enter day (1-31): ";
+    cin >> day;
+    cout << "Enter month (1-12): ";
+    cin >> month;
+    
+    displayDailySchedule(day, month);
+}
+
+void displayDailySchedule(int day, int month) {
+    system("CLS");
+    cout << "\n========================================" << endl;
+    cout << "    SCHEDULE FOR " << day << "/" << month << endl;
+    cout << "========================================" << endl;
+    
+    bool found = false;
+    int count = 1;
+    
+    for (const auto& task : users[currentUserIndex].tasks) {
+        if (task.day == day && task.month == month) {
+            cout << count++ << ". " << task.time << " - " << task.description << endl;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        cout << "No tasks scheduled for this date." << endl;
+    }
+}
+
+void editTask() {
+    system("CLS");
+    viewSchedule();
+    
+    if (users[currentUserIndex].tasks.empty()) {
+        return;
+    }
+    
+    int taskNum;
+    cout << "\nEnter task number to edit: ";
+    cin >> taskNum;
+    
+    if (taskNum < 1 || taskNum > users[currentUserIndex].tasks.size()) {
+        cout << "Invalid task number." << endl;
+        return;
+    }
+    
+    Task& task = users[currentUserIndex].tasks[taskNum - 1];
+    cin.ignore();
+    
+    cout << "\nEditing task: " << task.description << endl;
+    cout << "Enter new description (or press Enter to keep current): ";
+    string newDesc;
+    getline(cin, newDesc);
+    if (!newDesc.empty()) {
+        task.description = newDesc;
+    }
+    
+    cout << "Enter new time (or press Enter to keep current): ";
+    string newTime;
+    getline(cin, newTime);
+    if (!newTime.empty()) {
+        task.time = newTime;
+    }
+    
+    cout << "Task updated successfully!" << endl;
+}
+
+void deleteTask() {
+    system("CLS");
+    viewSchedule();
+    
+    if (users[currentUserIndex].tasks.empty()) {
+        return;
+    }
+    
+    int taskNum;
+    cout << "\nEnter task number to delete: ";
+    cin >> taskNum;
+    
+    if (taskNum < 1 || taskNum > users[currentUserIndex].tasks.size()) {
+        cout << "Invalid task number." << endl;
+        return;
+    }
+    
+    users[currentUserIndex].tasks.erase(users[currentUserIndex].tasks.begin() + taskNum - 1);
+    cout << "Task deleted successfully!" << endl;
+}
+
+void journalMenu() {
+    system("CLS");
+    int choice;
+    
+    while (true) {
+        cout << "\n========================================" << endl;
+        cout << "          JOURNAL SYSTEM" << endl;
+        cout << "========================================" << endl;
+        cout << "1. Write New Journal Entry" << endl;
+        cout << "2. View All Journal Entries" << endl;
+        cout << "3. View Journal by Date" << endl;
+        cout << "4. Search Journal by Mood" << endl;
+        cout << "5. Edit Journal Entry" << endl;
+        cout << "6. Delete Journal Entry" << endl;
+        cout << "7. Back to Main Menu" << endl;
+        cout << "Choose an option: ";
+        cin >> choice;
+        
+        switch (choice) {
+            case 1:
+                addJournalEntry();
+                break;
+            case 2:
+                viewAllJournals();
+                break;
+            case 3:
+                viewJournalByDate();
+                break;
+            case 4:
+                searchJournalByMood();
+                break;
+            case 5:
+                editJournalEntry();
+                break;
+            case 6:
+                deleteJournalEntry();
+                break;
+            case 7:
+                return;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    }
+}
+
+void addJournalEntry() {
+    system("CLS");
+    JournalEntry entry;
+    cin.ignore();
+    
+    cout << "\n--- NEW JOURNAL ENTRY ---" << endl;
+    cout << "Enter title: ";
+    getline(cin, entry.title);
+    
+    cout << "How are you feeling? (Happy/Sad/Excited/Anxious/Grateful/Neutral): ";
+    getline(cin, entry.mood);
+    
+    cout << "Enter day (1-31): ";
+    cin >> entry.day;
+    cout << "Enter month (1-12): ";
+    cin >> entry.month;
+    cout << "Enter year: ";
+    cin >> entry.year;
+    
+    cin.ignore();
+    cout << "\nWrite your journal entry (type 'END' on a new line when finished):" << endl;
+    
+    string line;
+    entry.content = "";
+    while (getline(cin, line) && line != "END") {
+        entry.content += line + "\n";
+    }
+    
+    users[currentUserIndex].journal.push_back(entry);
+    cout << "\nJournal entry saved successfully!" << endl;
+}
+
+void viewAllJournals() {
+    system("CLS");
+    cout << "\n========================================" << endl;
+    cout << "        YOUR JOURNAL ENTRIES" << endl;
+    cout << "========================================" << endl;
+    
+    if (users[currentUserIndex].journal.empty()) {
+        cout << "No journal entries yet. Start writing!" << endl;
+        return;
+    }
+    
+    for (int i = 0; i < users[currentUserIndex].journal.size(); i++) {
+        JournalEntry& entry = users[currentUserIndex].journal[i];
+        cout << "\n[Entry #" << (i + 1) << "]" << endl;
+        cout << "Date: " << entry.day << "/" << entry.month << "/" << entry.year << endl;
+        cout << "Title: " << entry.title << endl;
+        cout << "Mood: " << entry.mood << endl;
+        cout << "Content:\n" << entry.content << endl;
+        cout << string(40, '-') << endl;
+    }
+}
+
+void viewJournalByDate() {
+    system("CLS");
+    int day, month, year;
+    cout << "\n--- VIEW JOURNAL BY DATE ---" << endl;
+    cout << "Enter day (1-31): ";
+    cin >> day;
+    cout << "Enter month (1-12): ";
+    cin >> month;
+    cout << "Enter year: ";
+    cin >> year;
+    
+    bool found = false;
+    
+    cout << "\n========================================" << endl;
+    cout << "  JOURNALS FOR " << day << "/" << month << "/" << year << endl;
+    cout << "========================================" << endl;
+    
+    for (int i = 0; i < users[currentUserIndex].journal.size(); i++) {
+        JournalEntry& entry = users[currentUserIndex].journal[i];
+        if (entry.day == day && entry.month == month && entry.year == year) {
+            cout << "\n[Entry #" << (i + 1) << "]" << endl;
+            cout << "Title: " << entry.title << endl;
+            cout << "Mood: " << entry.mood << endl;
+            cout << "Content:\n" << entry.content << endl;
+            cout << string(40, '-') << endl;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        cout << "No journal entries found for this date." << endl;
+    }
+}
+
+void searchJournalByMood() {
+    system("CLS");
+    string mood;
+    cin.ignore();
+    
+    cout << "\n--- SEARCH BY MOOD ---" << endl;
+    cout << "Enter mood to search: ";
+    getline(cin, mood);
+    
+    bool found = false;
+    
+    cout << "\n========================================" << endl;
+    cout << "  JOURNALS WITH MOOD: " << mood << endl;
+    cout << "========================================" << endl;
+    
+    for (int i = 0; i < users[currentUserIndex].journal.size(); i++) {
+        JournalEntry& entry = users[currentUserIndex].journal[i];
+        if (entry.mood == mood) {
+            cout << "\n[Entry #" << (i + 1) << "]" << endl;
+            cout << "Date: " << entry.day << "/" << entry.month << "/" << entry.year << endl;
+            cout << "Title: " << entry.title << endl;
+            cout << "Content:\n" << entry.content << endl;
+            cout << string(40, '-') << endl;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        cout << "No journal entries found with mood: " << mood << endl;
+    }
+}
+
+void editJournalEntry() {
+    system("CLS");
+    viewAllJournals();
+    
+    if (users[currentUserIndex].journal.empty()) {
+        return;
+    }
+    
+    int entryNum;
+    cout << "\nEnter entry number to edit: ";
+    cin >> entryNum;
+    
+    if (entryNum < 1 || entryNum > users[currentUserIndex].journal.size()) {
+        cout << "Invalid entry number." << endl;
+        return;
+    }
+    
+    JournalEntry& entry = users[currentUserIndex].journal[entryNum - 1];
+    cin.ignore();
+    
+    cout << "\nEditing journal: " << entry.title << endl;
+    cout << "Enter new title (or press Enter to keep current): ";
+    string newTitle;
+    getline(cin, newTitle);
+    if (!newTitle.empty()) {
+        entry.title = newTitle;
+    }
+    
+    cout << "Enter new mood (or press Enter to keep current): ";
+    string newMood;
+    getline(cin, newMood);
+    if (!newMood.empty()) {
+        entry.mood = newMood;
+    }
+    
+    cout << "Edit content? (y/n): ";
+    char editContent;
+    cin >> editContent;
+    
+    if (editContent == 'y' || editContent == 'Y') {
+        cin.ignore();
+        cout << "Enter new content (type 'END' on a new line when finished):" << endl;
+        string line;
+        entry.content = "";
+        while (getline(cin, line) && line != "END") {
+            entry.content += line + "\n";
+        }
+    }
+    
+    cout << "Journal entry updated successfully!" << endl;
+}
+
+void deleteJournalEntry() {    
+    system("CLS");
+
+    viewAllJournals();
+    
+    if (users[currentUserIndex].journal.empty()) {
+        return;
+    }
+    
+    int entryNum;
+    cout << "\nEnter entry number to delete: ";
+    cin >> entryNum;
+    
+    if (entryNum < 1 || entryNum > users[currentUserIndex].journal.size()) {
+        cout << "Invalid entry number." << endl;
+        return;
+    }
+    
+    users[currentUserIndex].journal.erase(users[currentUserIndex].journal.begin() + entryNum - 1);
+    cout << "Journal entry deleted successfully!" << endl;
