@@ -1,0 +1,473 @@
+Pseudocode
+The pseudocode below shows how the Day Planner System was made; this combines both the task scheduling and journal management. It shows the most essential data structures, which are Task, JournalEntry, and User. These showcase the important components of the program. The system starts by prompting users to either register or log in, which ensures individual data privacy. Once done, users get to access the main menu, which provides multiple options, such as adding, viewing, editing, and deleting tasks, as well as the highlight of the system, which is the ability to journal. 
+
+START
+STRUCTURE Task:
+    description: string
+    time: string
+    day: integer
+    month: integer
+END STRUCTURE
+
+STRUCTURE JournalEntry:
+    title: string
+    content: string
+    day: integer
+    month: integer
+    year: integer
+    mood: string
+END STRUCTURE
+
+STRUCTURE User:
+    username: string
+    password: string
+    tasks: array of Task
+    journal: array of JournalEntry
+END STRUCTURE
+
+users: array of User
+currentUserIndex: integer = -1
+
+
+BEGIN
+    DECLARE choice: integer
+    DECLARE loggedIn: boolean = false
+    
+    DISPLAY "WELCOME TO THE DAY PLANNER SYSTEM"
+    
+    WHILE true DO
+        IF NOT loggedIn THEN
+            DISPLAY "1. Register"
+            DISPLAY "2. Login"
+            DISPLAY "3. Exit"
+            INPUT choice
+            
+            IF choice = 1 THEN
+                CALL registerUser()
+            ELSE IF choice = 2 THEN
+                loggedIn = CALL loginUser()
+            ELSE IF choice = 3 THEN
+                DISPLAY "Goodbye!"
+                BREAK
+            ELSE
+                DISPLAY "Invalid choice"
+            END IF
+            
+        ELSE
+            CALL displayMenu()
+            INPUT choice
+            
+            SWITCH choice:
+                CASE 1: CALL addTask()
+                CASE 2: CALL viewSchedule()
+                CASE 3: CALL viewTasksByDate()
+                CASE 4: CALL editTask()
+                CASE 5: CALL deleteTask()
+                CASE 6: CALL journalMenu()
+                CASE 7: 
+                    loggedIn = false
+                    currentUserIndex = -1
+                    DISPLAY "Logged out"
+                CASE 8: 
+                    DISPLAY "Goodbye!"
+                    EXIT PROGRAM
+                DEFAULT: DISPLAY "Invalid choice"
+            END SWITCH
+        END IF
+    END WHILE
+END MAIN
+
+
+FUNCTION displayMenu():
+
+BEGIN
+    DISPLAY "========== MAIN MENU =========="
+    DISPLAY "1. Add Task/Schedule"
+    DISPLAY "2. View All Tasks"
+    DISPLAY "3. View Tasks by Date"
+    DISPLAY "4. Edit Task"
+    DISPLAY "5. Delete Task"
+    DISPLAY "6. Journal System"
+    DISPLAY "7. Logout"
+    DISPLAY "8. Exit"
+END FUNCTION
+
+
+FUNCTION registerUser():
+------------------------
+BEGIN
+    DECLARE newUser: User
+    
+    DISPLAY "--- REGISTRATION ---"
+    INPUT newUser.username
+    
+    FOR EACH user IN users DO
+        IF user.username = newUser.username THEN
+            DISPLAY "Username already exists"
+            RETURN
+        END IF
+    END FOR
+    
+    INPUT newUser.password
+    ADD newUser to users array
+    DISPLAY "Registration successful"
+END FUNCTION
+
+
+FUNCTION loginUser() RETURNS boolean:
+-------------------------------------
+BEGIN
+    DECLARE username, password: string
+    
+    DISPLAY "--- LOGIN ---"
+    INPUT username
+    INPUT password
+    
+    FOR i = 0 TO length(users) - 1 DO
+        IF users[i].username = username AND users[i].password = password THEN
+            currentUserIndex = i
+            DISPLAY "Welcome back, " + username
+            RETURN true
+        END IF
+    END FOR
+    
+    DISPLAY "Invalid username or password"
+    RETURN false
+END FUNCTION
+
+
+FUNCTION addTask():
+-------------------
+BEGIN
+    DECLARE newTask: Task
+    
+    DISPLAY "--- ADD NEW TASK ---"
+    INPUT newTask.description
+    INPUT newTask.time
+    INPUT newTask.day
+    INPUT newTask.month
+    
+    ADD newTask to users[currentUserIndex].tasks
+    DISPLAY "Task added successfully"
+END FUNCTION
+
+
+FUNCTION viewSchedule():
+-----------------------
+BEGIN
+    DISPLAY "YOUR COMPLETE SCHEDULE"
+    
+    IF users[currentUserIndex].tasks is empty THEN
+        DISPLAY "No tasks scheduled yet"
+        RETURN
+    END IF
+    
+    DISPLAY table headers (No., Task, Time, Date)
+    
+    FOR i = 0 TO length(users[currentUserIndex].tasks) - 1 DO
+        SET task = users[currentUserIndex].tasks[i]
+        DISPLAY (i+1), task.description, task.time, task.day/task.month
+    END FOR
+END FUNCTION
+
+
+FUNCTION viewTasksByDate():
+---------------------------
+BEGIN
+    DECLARE day, month: integer
+    
+    INPUT day
+    INPUT month
+    
+    CALL displayDailySchedule(day, month)
+END FUNCTION
+
+
+FUNCTION displayDailySchedule(day, month):
+------------------------------------------
+BEGIN
+    DISPLAY "SCHEDULE FOR " + day + "/" + month
+    
+    SET found = false
+    SET count = 1
+    
+    FOR EACH task IN users[currentUserIndex].tasks DO
+        IF task.day = day AND task.month = month THEN
+            DISPLAY count + ". " + task.time + " - " + task.description
+            count = count + 1
+            found = true
+        END IF
+    END FOR
+    
+    IF NOT found THEN
+        DISPLAY "No tasks scheduled for this date"
+    END IF
+END FUNCTION
+
+
+FUNCTION editTask():
+--------------------
+BEGIN
+    CALL viewSchedule()
+    
+    IF users[currentUserIndex].tasks is empty THEN
+        RETURN
+    END IF
+    
+    DECLARE taskNum: integer
+    INPUT taskNum
+    
+    IF taskNum < 1 OR taskNum > length(users[currentUserIndex].tasks) THEN
+        DISPLAY "Invalid task number"
+        RETURN
+    END IF
+    
+    SET task = users[currentUserIndex].tasks[taskNum - 1]
+    
+    DISPLAY "Editing task: " + task.description
+    
+    INPUT newDesc (optional)
+    IF newDesc is not empty THEN
+        task.description = newDesc
+    END IF
+    
+    INPUT newTime (optional)
+    IF newTime is not empty THEN
+        task.time = newTime
+    END IF
+    
+    DISPLAY "Task updated successfully"
+END FUNCTION
+
+
+FUNCTION deleteTask():
+----------------------
+BEGIN
+    CALL viewSchedule()
+    
+    IF users[currentUserIndex].tasks is empty THEN
+        RETURN
+    END IF
+    
+    DECLARE taskNum: integer
+    INPUT taskNum
+    
+    IF taskNum < 1 OR taskNum > length(users[currentUserIndex].tasks) THEN
+        DISPLAY "Invalid task number"
+        RETURN
+    END IF
+    
+    REMOVE users[currentUserIndex].tasks[taskNum - 1]
+    DISPLAY "Task deleted successfully"
+END FUNCTION
+
+
+FUNCTION journalMenu():
+-----------------------
+BEGIN
+    DECLARE choice: integer
+    
+    WHILE true DO
+        DISPLAY "========== JOURNAL SYSTEM =========="
+        DISPLAY "1. Write New Journal Entry"
+        DISPLAY "2. View All Journal Entries"
+        DISPLAY "3. View Journal by Date"
+        DISPLAY "4. Search Journal by Mood"
+        DISPLAY "5. Edit Journal Entry"
+        DISPLAY "6. Delete Journal Entry"
+        DISPLAY "7. Back to Main Menu"
+        INPUT choice
+        
+        SWITCH choice:
+            CASE 1: CALL addJournalEntry()
+            CASE 2: CALL viewAllJournals()
+            CASE 3: CALL viewJournalByDate()
+            CASE 4: CALL searchJournalByMood()
+            CASE 5: CALL editJournalEntry()
+            CASE 6: CALL deleteJournalEntry()
+            CASE 7: RETURN to main menu
+            DEFAULT: DISPLAY "Invalid choice"
+        END SWITCH
+    END WHILE
+END FUNCTION
+
+
+FUNCTION addJournalEntry():
+---------------------------
+BEGIN
+    DECLARE entry: JournalEntry
+    
+    DISPLAY "--- NEW JOURNAL ENTRY ---"
+    INPUT entry.title
+    INPUT entry.mood
+    INPUT entry.day
+    INPUT entry.month
+    INPUT entry.year
+    
+    DISPLAY "Write your journal entry (type 'END' when finished)"
+    
+    SET entry.content = ""
+    WHILE true DO
+        INPUT line
+        IF line = "END" THEN
+            BREAK
+        END IF
+        entry.content = entry.content + line + newline
+    END WHILE
+    
+    ADD entry to users[currentUserIndex].journal
+    DISPLAY "Journal entry saved successfully"
+END FUNCTION
+
+
+FUNCTION viewAllJournals():
+---------------------------
+BEGIN
+    DISPLAY "YOUR JOURNAL ENTRIES"
+    
+    IF users[currentUserIndex].journal is empty THEN
+        DISPLAY "No journal entries yet"
+        RETURN
+    END IF
+    
+    FOR i = 0 TO length(users[currentUserIndex].journal) - 1 DO
+        SET entry = users[currentUserIndex].journal[i]
+        DISPLAY "[Entry #" + (i+1) + "]"
+        DISPLAY "Date: " + entry.day + "/" + entry.month + "/" + entry.year
+        DISPLAY "Title: " + entry.title
+        DISPLAY "Mood: " + entry.mood
+        DISPLAY "Content: " + entry.content
+        DISPLAY separator line
+    END FOR
+END FUNCTION
+
+
+FUNCTION viewJournalByDate():
+-----------------------------
+BEGIN
+    DECLARE day, month, year: integer
+    
+    INPUT day
+    INPUT month
+    INPUT year
+    
+    SET found = false
+    
+    DISPLAY "JOURNALS FOR " + day + "/" + month + "/" + year
+    
+    FOR i = 0 TO length(users[currentUserIndex].journal) - 1 DO
+        SET entry = users[currentUserIndex].journal[i]
+        IF entry.day = day AND entry.month = month AND entry.year = year THEN
+            DISPLAY "[Entry #" + (i+1) + "]"
+            DISPLAY "Title: " + entry.title
+            DISPLAY "Mood: " + entry.mood
+            DISPLAY "Content: " + entry.content
+            DISPLAY separator line
+            found = true
+        END IF
+    END FOR
+    
+    IF NOT found THEN
+        DISPLAY "No journal entries found for this date"
+    END IF
+END FUNCTION
+
+
+FUNCTION searchJournalByMood():
+-------------------------------
+BEGIN
+    DECLARE mood: string
+    
+    INPUT mood
+    
+    SET found = false
+    
+    DISPLAY "JOURNALS WITH MOOD: " + mood
+    
+    FOR i = 0 TO length(users[currentUserIndex].journal) - 1 DO
+        SET entry = users[currentUserIndex].journal[i]
+        IF entry.mood = mood THEN
+            DISPLAY "[Entry #" + (i+1) + "]"
+            DISPLAY "Date: " + entry.day + "/" + entry.month + "/" + entry.year
+            DISPLAY "Title: " + entry.title
+            DISPLAY "Content: " + entry.content
+            DISPLAY separator line
+            found = true
+        END IF
+    END FOR
+    
+    IF NOT found THEN
+        DISPLAY "No journal entries found with mood: " + mood
+    END IF
+END FUNCTION
+
+
+FUNCTION editJournalEntry():
+----------------------------
+BEGIN
+    CALL viewAllJournals()
+    
+    IF users[currentUserIndex].journal is empty THEN
+        RETURN
+    END IF
+    
+    DECLARE entryNum: integer
+    INPUT entryNum
+    
+    IF entryNum < 1 OR entryNum > length(users[currentUserIndex].journal) THEN
+        DISPLAY "Invalid entry number"
+        RETURN
+    END IF
+    
+    SET entry = users[currentUserIndex].journal[entryNum - 1]
+    
+    DISPLAY "Editing journal: " + entry.title
+    
+    INPUT newTitle (optional)
+    IF newTitle is not empty THEN
+        entry.title = newTitle
+    END IF
+    
+    INPUT newMood (optional)
+    IF newMood is not empty THEN
+        entry.mood = newMood
+    END IF
+    
+    INPUT editContent (yes/no)
+    IF editContent = yes THEN
+        SET entry.content = ""
+        WHILE true DO
+            INPUT line
+            IF line = "END" THEN
+                BREAK
+            END IF
+            entry.content = entry.content + line + newline
+        END WHILE
+    END IF
+    
+    DISPLAY "Journal entry updated successfully"
+END FUNCTION
+
+
+FUNCTION deleteJournalEntry():
+------------------------------
+BEGIN
+    CALL viewAllJournals()
+    
+    IF users[currentUserIndex].journal is empty THEN
+        RETURN
+    END IF
+    
+    DECLARE entryNum: integer
+    INPUT entryNum
+    
+    IF entryNum < 1 OR entryNum > length(users[currentUserIndex].journal) THEN
+        DISPLAY "Invalid entry number"
+        RETURN
+    END IF
+    
+    REMOVE users[currentUserIndex].journal[entryNum - 1]
+    DISPLAY "Journal entry deleted successfully"
+END FUNCTION
+
+
